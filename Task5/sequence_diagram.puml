@@ -1,0 +1,30 @@
+@startuml
+
+actor "API Client" as Client
+participant "MES API" as MES_API
+database "Cache" as Cache
+database "MES DB" as MES_DB
+
+' Чтение списка заказов
+Client -> MES_API: Запрос на получение списка заказов
+MES_API -> Cache: Проверка наличия данных в кэше
+alt Кеш попадание (Cache-Aside)
+    Cache -> MES_API: Вернуть данные из кеша
+else Кеш промах (Cache-Aside)
+    MES_API -> MES_DB: Запрос на получение списка заказов
+    MES_DB -> MES_API: Список заказов
+    MES_API -> Cache: Сохранение данных в кеш
+    Cache -> MES_API: Вернуть данные из кэша
+end
+
+'Изменение статуса заказа
+Client -> MES_API: Запрос на обновление статуса заказа
+MES_API -> Cache: Обновление статуса заказа
+
+Cache -> MES_API: Подтверждение обновления кеша 
+MES_API -> MES_DB: Обновляем статус в базе данных
+MES_DB -> MES_API: Подтверждение записи
+
+MES_API -> Client: Подтверждение записи
+
+@enduml
